@@ -1,13 +1,13 @@
 .PHONY: test lint typecheck run-chaos report clean docker-up docker-down
 
 test:
-	pytest -q
+	source .venv/bin/activate && pytest -q
 
 lint:
-	ruff check src tests scripts
+	source .venv/bin/activate && ruff check src tests scripts
 
 typecheck:
-	mypy src
+	source .venv/bin/activate && mypy src
 
 run-chaos:
 	source .venv/bin/activate && python scripts/run_chaos.py --config configs/default.yaml --out reports/metrics.json
