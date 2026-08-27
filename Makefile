@@ -10,10 +10,10 @@ typecheck:
 	mypy src
 
 run-chaos:
-	python scripts/run_chaos.py --config configs/default.yaml --out reports/metrics.json
+	source .venv/bin/activate && python scripts/run_chaos.py --config configs/default.yaml --out reports/metrics.json
 
 report:
-	python scripts/generate_report.py --metrics reports/metrics.json --out reports/final_report.md
+	source .venv/bin/activate && python scripts/generate_report.py --metrics reports/metrics.json --out reports/final_report.md
 
 docker-up:
 	docker compose up -d
