@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import csv
 import json
 from pathlib import Path
 from statistics import median
@@ -45,6 +46,11 @@ class RunMetrics(BaseModel):
     def to_report_dict(self) -> dict[str, object]:
         return {
             "total_requests": self.total_requests,
+            "successful_requests": self.successful_requests,
+            "failed_requests": self.failed_requests,
+            "fallback_successes": self.fallback_successes,
+            "static_fallbacks": self.static_fallbacks,
+            "cache_hits": self.cache_hits,
             "availability": round(self.availability, 4),
             "error_rate": round(self.error_rate, 4),
             "latency_p50_ms": round(self.percentile(50), 2),
@@ -56,23 +62,35 @@ class RunMetrics(BaseModel):
             "recovery_time_ms": self.recovery_time_ms,
             "estimated_cost": round(self.estimated_cost, 6),
             "estimated_cost_saved": round(self.estimated_cost_saved, 6),
+            "latencies_ms": self.latencies_ms,
             "scenarios": self.scenarios,
         }
 
     def write_json(self, path: str | Path) -> None:
         Path(path).parent.mkdir(parents=True, exist_ok=True)
-        Path(path).write_text(json.dumps(self.to_report_dict(), indent=2, ensure_ascii=False))
+        data = self.model_dump()
+        Path(path).write_text(json.dumps(data, indent=2, ensure_ascii=False))
 
     def write_csv(self, path: str | Path) -> None:
         """Export metrics to CSV format.
 
-        TODO(student): Implement CSV export:
         1. Get report dict via self.to_report_dict()
         2. Flatten the "scenarios" dict: each scenario becomes "scenario_{name}" column
         3. Write a single-row CSV with csv.DictWriter (import csv at top of file)
         4. Create parent directories if needed
         """
-        raise NotImplementedError("TODO: implement write_csv()")
+        report = self.to_report_dict()
+
+        # Flatten scenarios dict
+        scenarios = report.pop("scenarios", {})
+        for name, status in scenarios.items():
+            report[f"scenario_{name}"] = status
+
+        Path(path).parent.mkdir(parents=True, exist_ok=True)
+        with open(path, "w", newline="") as f:
+            writer = csv.DictWriter(f, fieldnames=report.keys())
+            writer.writeheader()
+            writer.writerow(report)
 
 
 def percentile(values: Iterable[float], q: float) -> float:
